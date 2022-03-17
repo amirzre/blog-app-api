@@ -7,8 +7,10 @@ class ModelTests(TestCase):
     def test_create_user_with_phone_successful(self):
         """Test creating new user with an phone is successful"""
         phone = '989361234567'
+        password = 'Testpass'
         user = get_user_model().objects.create_user(
             phone=phone,
+            password=password,
         )
 
         self.assertEqual(user.phone, phone)
@@ -21,7 +23,8 @@ class ModelTests(TestCase):
     def test_create_new_superuser(self):
         """Test creating a new superuser"""
         user = get_user_model().objects.create_superuser(
-            phone='989361234567'
+            phone='989361234567',
+            password='testpass',
         )
 
         self.assertTrue(user.is_superuser)

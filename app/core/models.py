@@ -15,8 +15,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         message=_("Invalid phone number.")
     )
     phone = models.CharField(
-        max_length=12, validators=[phone_regex],
-        unique=True, verbose_name=_('phone')
+        max_length=12, validators=[phone_regex], unique=True,
+        verbose_name=_("phone")
     )
     first_name = models.CharField(
         max_length=100, blank=True, verbose_name=_('first name')
