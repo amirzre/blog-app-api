@@ -63,3 +63,24 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         else:
             return False
+
+
+class PhoneOtp(models.Model):
+    """Otp code that send for phone number"""
+    phone_regex = RegexValidator(
+        regex=r"^989\d{2}\s*?\d{3}\s*?\d{4}$",
+        message=_("Invalid phone number."),
+    )
+    phone = models.CharField(
+        max_length=12, validators=[phone_regex], unique=True,
+        verbose_name=_("phone"),
+    )
+    otp = models.CharField(max_length=6)
+
+    count = models.PositiveSmallIntegerField(
+        default=0, help_text=_("Number of otp sent")
+    )
+    verify = models.BooleanField(default=False, verbose_name=_("is verify"))
+
+    def __str__(self):
+        return self.phone
