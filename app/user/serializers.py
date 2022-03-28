@@ -32,6 +32,42 @@ class OtpSerializer(serializers.Serializer):
         return value
 
 
+class CreateTwoStepPasswordSerializer(serializers.Serializer):
+    """Create new two step password in register or login"""
+
+    new_password = serializers.CharField(max_length=20)
+    confirm_new_password = serializers.CharField(max_length=20)
+
+    def validate(self, data):
+        password = data.get('new_password')
+        confirm_password = data.get('confirm_new_password')
+
+        if password != confirm_password:
+            raise serializers.ValidationError(
+                {'Erorr': 'Your password did not match!'}
+            )
+        return data
+
+
+class ChangeTwoStepPasswordSerializer(serializers.Serializer):
+    """Change Two step password"""
+
+    old_password = serializers.CharField(max_length=20)
+    new_password = serializers.CharField(max_length=20)
+    confirm_new_password = serializers.CharField(max_length=20)
+
+    def validate(self, data):
+        password = data.get('new_password')
+        confirm_password = data.get('confirm_new_password')
+
+        if password != confirm_password:
+            raise serializers.ValidationError(
+                {'Error': 'Your password did not match.'}
+            )
+
+        return data
+
+
 class UsersListSerializer(serializers.ModelSerializer):
     """List all users in database"""
 

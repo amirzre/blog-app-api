@@ -1,11 +1,10 @@
-from extensions.code_generator import otp_generator
-from permissions import IsSuperUser
-from user.send_otp import send_otp
-from core.models import PhoneOtp
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,8 +15,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from user.serializers import (
     UsersListSerializer,
     AuthenticationSerializer,
-    OtpSerializer
+    OtpSerializer,
+    CreateTwoStepPasswordSerializer,
+    ChangeTwoStepPasswordSerializer
 )
+from user.send_otp import send_otp
+from extensions.code_generator import otp_generator
+from permissions import IsSuperUser
+from core.models import PhoneOtp
 
 
 class UserRegisterApiView(APIView):
@@ -74,9 +79,7 @@ class UserRegisterApiView(APIView):
 class UserLoginApiView(APIView):
     """Login user with phone number"""
 
-    permission_classes = [
-        AllowAny,
-    ]
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = AuthenticationSerializer(data=request.data)
@@ -208,3 +211,81 @@ class UsersListApiView(ListAPIView):
     search_fields = ('phone', 'first_name', 'last_name')
     ordering_fields = ('id', 'author')
     queryset = get_user_model().objects.all()
+
+
+class CreateTwoStepPasswordApiView(APIView):
+    """Send a password to create two step password"""
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        if not request.user.two_step_password:
+            serializer = CreateTwoStepPasswordSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            new_password = serializer.data.get('new_password')
+
+            try:
+                _: None = validate_password(new_password)
+            except ValidationError as error:
+                return Response(
+                    {'Error': error},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            user = get_object_or_404(get_user_model(), pk=request.user.pk)
+            user.set_password(new_password)
+            user.two_step_password = True
+            user.save(update_fields=['password', 'two_step_password'])
+            return Response(
+                {'Successful': 'Your password created successfully.'},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {'Error': 'Your request could not be approved.'},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+
+class ChangeTwoStepPasswordApiView(APIView):
+    """Change two step password for authenticated user"""
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        if not request.user.two_step_password:
+            serializer = ChangeTwoStepPasswordSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            new_password = serializer.data.get('new_password')
+
+            try:
+                _: None = validate_password(new_password)
+            except ValidationError as error:
+                return Response(
+                    {'errors': error},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            old_password = serializer.data.get('old_password')
+            user = get_object_or_404(get_user_model(), pk=request.user.pk)
+            check_password = user.check_password(old_password)
+
+            if check_password:
+                user.set_password(new_password)
+                user.save(update_fields=['password'])
+
+                return Response(
+                    {'Successful': 'Your password was changed successfully.'},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {'Error': 'The password entered is incorrect!'},
+                    status=status.HTTP_406_NOT_ACCEPTABLE,
+                )
+
+        return Response(
+            {'Error': 'Your request could not be approved.'},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
