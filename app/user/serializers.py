@@ -74,3 +74,21 @@ class UsersListSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'phone', 'first_name', 'last_name', 'author')
+
+
+class UserDetailUpdateDeleteSerializer(serializers.ModelSerializer):
+    """Serializer for detail, update and delete user"""
+
+    class Meta:
+        model = get_user_model()
+        exclude = ('password',)
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Serializer for user profile"""
+
+    phone = serializers.ReadOnlyField()
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'phone', 'first_name', 'last_name', 'two_step_password')

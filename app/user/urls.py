@@ -17,4 +17,7 @@ urlpatterns = [
     path('change-two-step-password/',
          views.ChangeTwoStepPasswordApiView.as_view(),
          name='change_two_step_password'),
+    path('<int:pk>/',
+         views.UserDetailUpdateDeleteApiView.as_view(),
+         name='detail'),
 ]

@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -17,7 +17,9 @@ from user.serializers import (
     AuthenticationSerializer,
     OtpSerializer,
     CreateTwoStepPasswordSerializer,
-    ChangeTwoStepPasswordSerializer
+    ChangeTwoStepPasswordSerializer,
+    UserDetailUpdateDeleteSerializer,
+    UserProfileSerializer,
 )
 from user.send_otp import send_otp
 from extensions.code_generator import otp_generator
@@ -202,17 +204,6 @@ class VerifyOtpApiView(APIView):
             )
 
 
-class UsersListApiView(ListAPIView):
-    """Returns a list of all existing users"""
-
-    serializer_class = UsersListSerializer
-    permission_classes = (IsSuperUser,)
-    filterset_fields = ('author',)
-    search_fields = ('phone', 'first_name', 'last_name')
-    ordering_fields = ('id', 'author')
-    queryset = get_user_model().objects.all()
-
-
 class CreateTwoStepPasswordApiView(APIView):
     """Send a password to create two step password"""
 
@@ -289,3 +280,36 @@ class ChangeTwoStepPasswordApiView(APIView):
             {'Error': 'Your request could not be approved.'},
             status=status.HTTP_401_UNAUTHORIZED,
         )
+
+
+class UsersListApiView(ListAPIView):
+    """Returns a list of all existing users"""
+
+    serializer_class = UsersListSerializer
+    permission_classes = (IsSuperUser,)
+    filterset_fields = ('author',)
+    search_fields = ('phone', 'first_name', 'last_name')
+    ordering_fields = ('id', 'author')
+    queryset = get_user_model().objects.all()
+
+
+class UserDetailUpdateDeleteApiView(RetrieveUpdateDestroyAPIView):
+    """Retrieve detail, update and delete user instance"""
+
+    serializer_class = UserDetailUpdateDeleteSerializer
+    permission_classes = (IsSuperUser,)
+
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        user = get_object_or_404(get_user_model(), pk=pk)
+        return user
+
+
+class UserProfileApiView(RetrieveUpdateDestroyAPIView):
+    """Retrieve, update and delete user account"""
+
+    serializer_class = UserProfileSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
