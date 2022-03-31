@@ -11,6 +11,7 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('user.urls', namespace='user')),
+    path('api/blog/', include('blog.urls', namespace='blog')),
 
     path(
         'api/token/refresh/',

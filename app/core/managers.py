@@ -1,4 +1,5 @@
 from django.contrib.auth.models import BaseUserManager
+from django.db.models import Manager
 
 
 class UserManager(BaseUserManager):
@@ -23,3 +24,17 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
 
         return user
+
+
+class BlogManager(Manager):
+
+    def publish(self):
+        """Return all published blogs"""
+        return self.filter(status='p')
+
+
+class CategoryManager(Manager):
+
+    def active(self):
+        """Return active categories"""
+        return self.filter(status=True)

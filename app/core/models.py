@@ -1,15 +1,18 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.admin import display
 from django.utils import timezone
 
-from core.managers import UserManager
+from core.managers import UserManager, BlogManager, CategoryManager
+from extensions.upload_file_path import upload_file_path
 
 
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom user model that supports using phone instead of username"""
+
     phone_regex = RegexValidator(
         regex=r"^989\d{2}\s*?\d{3}\s*?\d{4}$",
         message=_("Invalid phone number.")
@@ -67,6 +70,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class PhoneOtp(models.Model):
     """Otp code that send for phone number"""
+
     phone_regex = RegexValidator(
         regex=r"^989\d{2}\s*?\d{3}\s*?\d{4}$",
         message=_("Invalid phone number."),
@@ -84,3 +88,112 @@ class PhoneOtp(models.Model):
 
     def __str__(self):
         return self.phone
+
+
+class Blog(models.Model):
+    """Model for create new blog"""
+
+    STATUS_CHOICES = (
+        ('p', 'publish'),
+        ('d', 'draft'),
+    )
+    author = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name='blogs',
+        default=None,
+        blank=False,
+        null=False,
+        verbose_name=_('Author')
+    )
+    category = models.ManyToManyField(
+        'Category',
+        default=None,
+        related_name='blogs',
+        blank=True,
+        verbose_name=_('Categories')
+    )
+    title = models.CharField(max_length=200, verbose_name=_('Title'))
+    slug = models.SlugField(
+        unique=True,
+        blank=True,
+        verbose_name=_('Slug')
+    )
+    body = models.TextField(blank=False, verbose_name=_("Content"))
+    image = models.ImageField(
+        upload_to=upload_file_path,
+        verbose_name=_('Image')
+    )
+    summery = models.TextField(max_length=400, verbose_name=_('Summery'))
+    likes = models.ManyToManyField(
+        get_user_model(),
+        related_name='blogs_like',
+        blank=True,
+        verbose_name=_('Likes')
+    )
+    publish = models.DateTimeField(
+        default=timezone.now,
+        verbose_name=_('Publish Time')
+    )
+    create = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_('Create Time')
+    )
+    updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_('Update Time')
+    )
+    special = models.BooleanField(
+        default=False,
+        verbose_name=_('Is special blog?')
+    )
+    status = models.CharField(
+        max_length=1,
+        choices=STATUS_CHOICES,
+        verbose_name=_('Status')
+    )
+    visits = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_('Visits')
+    )
+
+    objects = BlogManager()
+
+    def __str__(self):
+        return f'{self.author.first_name} - {self.title}'
+
+    class Meta:
+        ordering = ('-publish', '-updated')
+        verbose_name = _('Blog')
+        verbose_name_plural = _('Blogs')
+
+
+class Category(models.Model):
+    """Model for create new category"""
+
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        related_name='children',
+        default=None,
+        blank=True,
+        null=True,
+        verbose_name=_('SubCategory')
+    )
+    title = models.CharField(max_length=200, verbose_name=_('Title'))
+    slug = models.SlugField(
+        unique=True,
+        blank=False,
+        verbose_name=_('Slug')
+    )
+    status = models.BooleanField(default=False, verbose_name=_('Status'))
+
+    objects = CategoryManager()
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = _('Category')
+        verbose_name_plural = _('Categories')

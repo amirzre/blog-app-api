@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from core.models import User
+from core.models import User, Blog, Category
 
 
 @admin.register(User)
@@ -31,3 +31,24 @@ class UserAdmin(admin.ModelAdmin):
             'fields': ('phone', 'first_name', 'last_name')
         })
     )
+
+
+@admin.register(Blog)
+class BlogAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug', 'author', 'special', 'status', 'visits')
+    search_fields = ('title', 'author__first_name', 'category__title')
+    list_filter = ('status', 'special', 'publish')
+    prepopulated_fields = {'slug': ('title',), }
+    exclude = ('slug',)
+    filter_horizontal = ('category', 'likes')
+    radio_fields = {'status': admin.HORIZONTAL}
+    list_per_page = 30
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug', 'parent', 'status')
+    search_fields = ('title', 'slug', 'status')
+    list_filter = ('status',)
+    prepopulated_fields = {'slug': ('title',), }
+    list_per_page = 30

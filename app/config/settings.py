@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # Local apps
     'core.apps.CoreConfig',
     'user.apps.UserConfig',
+    'blog.apps.BlogConfig',
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
