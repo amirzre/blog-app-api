@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from core.models import User, Blog, Category
+from core.models import User, Blog, Category, Comment
 
 
 @admin.register(User)
@@ -49,4 +49,10 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'parent', 'status')
     search_fields = ('title', 'slug', 'status')
     list_filter = ('status',)
+    list_per_page = 30
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'name', 'create', 'updated', 'body')
     list_per_page = 30

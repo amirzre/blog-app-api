@@ -5,8 +5,15 @@ from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.admin import display
 from django.utils import timezone
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
-from core.managers import UserManager, BlogManager, CategoryManager
+from core.managers import (
+    UserManager,
+    BlogManager,
+    CategoryManager,
+    CommentManager
+)
 from extensions.upload_file_path import upload_file_path
 
 
@@ -197,3 +204,51 @@ class Category(models.Model):
         ordering = ('id',)
         verbose_name = _('Category')
         verbose_name_plural = _('Categories')
+
+
+class Comment(models.Model):
+    """Model for create new comment"""
+
+    user = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name=_('User')
+    )
+    name = models.CharField(
+        max_length=20, blank=True, null=True, verbose_name=_('Name')
+    )
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name=_('Comments')
+    )
+    object_id = models.PositiveIntegerField(verbose_name=_('object_id'))
+    content_object = GenericForeignKey("content_type", "object_id")
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        related_name='children',
+        blank=True,
+        null=True,
+        verbose_name=_('Parent')
+    )
+    body = models.TextField(verbose_name=_("Body"))
+    create = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("Create time")
+    )
+    updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_("Update time")
+    )
+
+    objects = CommentManager()
+
+    def __str__(self):
+        return self.user.phone
+
+    class Meta:
+        ordering = ('-create', '-id')
+        verbose_name = _('Comment')
+        verbose_name_plural = _('Comments')
