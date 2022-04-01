@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',
     'user.apps.UserConfig',
     'blog.apps.BlogConfig',
+    'comment.apps.CommentConfig',
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
