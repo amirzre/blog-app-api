@@ -38,7 +38,6 @@ class BlogAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'author', 'special', 'status', 'visits')
     search_fields = ('title', 'author__first_name', 'category__title')
     list_filter = ('status', 'special', 'publish')
-    prepopulated_fields = {'slug': ('title',), }
     exclude = ('slug',)
     filter_horizontal = ('category', 'likes')
     radio_fields = {'status': admin.HORIZONTAL}
@@ -50,5 +49,4 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'parent', 'status')
     search_fields = ('title', 'slug', 'status')
     list_filter = ('status',)
-    prepopulated_fields = {'slug': ('title',), }
     list_per_page = 30
