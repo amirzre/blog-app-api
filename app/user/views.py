@@ -69,7 +69,7 @@ class UserRegisterApiView(APIView):
 
             return Response(
                 context,
-                status=status.HTTP_200_OK,
+                status=status.HTTP_201_CREATED,
             )
         else:
             return Response(
@@ -128,7 +128,7 @@ class UserLoginApiView(APIView):
         else:
             return Response(
                 serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_405_METHOD_NOT_ALLOWED,
             )
 
 
